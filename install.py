@@ -4,6 +4,7 @@ from os.path import exists
 from urllib2 import urlopen
 from json import loads, dumps
 from sys import stdout
+from os import mkdir
 import re
 
 url = 'http://tolweb.org/onlinecontributors/app?service=external&page=xml/TreeStructureService&node_id=1'
@@ -22,12 +23,12 @@ def console(message, polling=False):
 	if polling:
 		# Print on the same line.
 		print(message, end='\r')
-		stdout.flush()
 		console.length = len(message)
 	else:
 		# Print normal line.
 		print(message)
 		console.length = 0
+	stdout.flush()
 console.length = 0
 
 def size_format(num):
@@ -48,8 +49,6 @@ def read_file(f, chunksize=10240):
 			break
 
 def scan(branch, path):
-	scan.count += 1
-	console('Scanning %d' % scan.count)
 	tid = branch.attrib['ID']
 	path.append(tid)
 	if branch.attrib['LEAF']:
@@ -62,7 +61,7 @@ def scan(branch, path):
 				request.close()
 				for match in reg.findall(data, re.MULTILINE):
 					_, _, src = match
-					image = '%s-%d.%s' % (tid, len(images) + 1, src.split('.')[-1])
+					image = src.split('/')[-1]
 					images.append(image)
 					request = urlopen('http://tolweb.org%s' % src)
 					with open('images/%s' % image, 'w') as f:
@@ -83,8 +82,10 @@ def scan(branch, path):
 					if branch.attrib['EXTINCT']:
 						species['extinct'] = True
 					tree[key] = species
-	else:
-		nodes = branch.findall('NODES')
+	scan.count += 1
+	console('Scanning %d' % scan.count, polling=True)
+	nodes = branch.findall('NODES/NODE')
+	if nodes is not None:
 		for node in nodes:
 			scan(node, path)
 scan.count = 0
