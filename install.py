@@ -98,7 +98,8 @@ if not exists(cache):
 # Parse the XML file and output a JSON file containing all nodes.
 if exists(output):
 	with open(output, 'r') as f:
-		scan.nodes = loads(f.read())
+		for tid, node in loads(f.read()).iteritems():
+			scan.nodes[int(tid)] = node
 		scan.count = len(scan.nodes)
 else:
 	console('Parsing %s' % cache, polling=True)
@@ -121,7 +122,7 @@ try:
 		if 'haspage' not in node:
 			continue
 		node['images'] = []
-		request = urlopen('http://tolweb.org/%s' % tid)
+		request = urlopen('http://tolweb.org/%d' % tid)
 		page = request.read()
 		request.close()
 		sleep(0.25)
@@ -158,17 +159,19 @@ for tid, node in scan.nodes.iteritems():
 	name = 'nodes/%d.json' % tid
 	if not exists(name):
 		pid = node['parent']
-		del node['parent']
-		node['parents'] = []
+		n = node.copy()
+		del n['parent']
+		n['tid'] = tid
+		n['parents'] = []
 		while pid > 0:
 			parent = scan.nodes[pid]
-			node['parents'].append(pid)
+			n['parents'].append(pid)
 			pid = parent['parent']
 		with open(name, 'w') as f:
-			f.write(dumps(node))
+			f.write(dumps(n))
 console('Saved node files')
 
-# Write out species files.
+# Write out species file.
 count = 0
 species = []
 for tid, node in scan.nodes.iteritems():
@@ -177,7 +180,8 @@ for tid, node in scan.nodes.iteritems():
 	if not (node['images'] and node['leaf']):
 		continue # Only play game with leaf nodes having at least one image.
 	species.append(tid)
-with open('species.json', 'w') as f:
-	console('Writing species.json', polling=True)
+name = 'species.json'
+with open(name, 'w') as f:
+	console('Writing %s' % name, polling=True)
 	f.write(species)
-	console('Wrote species.json', polling=True)
+	console('Wrote %s' % name)

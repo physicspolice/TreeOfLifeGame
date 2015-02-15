@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Tree of Life the Game</title>
+		<link rel="stylesheet" href="main.css">
+		<script src="angular.min.js"></script>
+		<script src="main.js"></script>
+	</head>
+	<body ng-app="gameApp" ng-controller="initGame">
+		<div ng-repeat="node in game" ng-click="submitGame(node.tid)">
+			<img ng-src="{{node.images[0]}}" />
+			<p ng-repeat="name in node.names">{{name}}</p>
+			<span>{{name.desc}}</span>
+		</div>
+	</body>
+</html>
