@@ -1,7 +1,8 @@
 from __future__ import print_function
 import xml.etree.ElementTree as xml
+from HTMLParser import HTMLParser
 from os.path import exists
-from urllib2 import urlopen, HTTPError
+from urllib2 import urlopen, quote, HTTPError
 from shutil import move
 from json import loads, dumps
 from time import sleep
@@ -59,20 +60,22 @@ def scan(branch, parent):
 			request = urlopen('http://tolweb.org/%s' % tid)
 			page = request.read()
 			request.close()
+			sleep(0.25)
 			for match in reg.findall(page, re.MULTILINE):
 				_, _, src = match
+				src = HTMLParser().unescape(src).encode('utf8')
 				image = src.split('/')[-1]
 				images.append(image)
 				if not exists('images/%s' % image):
 					try:
-						request = urlopen('http://tolweb.org%s' % src)
+						request = urlopen('http://tolweb.org%s' % quote(src))
 						with open(scratch, 'w') as f:
 							f.write(request.read())
 						request.close()
 						sleep(0.25)
 						move(scratch, 'images/%s' % image)
 					except HTTPError as e:
-						console(e)
+						console(str(e))
 						console('http://tolweb.org%s' % src)
 					scan.images += 1
 			names = [branch.find('NAME').text]
