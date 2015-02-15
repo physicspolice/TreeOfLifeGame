@@ -1,11 +1,12 @@
 from __future__ import print_function
 import xml.etree.ElementTree as xml
-from os.path import exists, isfile
-from urllib2 import urlopen
+from os.path import exists
+from urllib2 import urlopen, HTTPError
 from shutil import move
 from json import loads, dumps
+from time import sleep
 from sys import stdout
-from os import mkdir, listdir
+from os import mkdir
 import re
 
 url = 'http://tolweb.org/onlinecontributors/app?service=external&page=xml/TreeStructureService&node_id=1'
@@ -52,7 +53,7 @@ def read_file(f, chunksize=10240):
 
 def scan(branch, parent):
 	tid = branch.attrib['ID']
-	if branch.attrib['LEAF'] and branch.attrib['HASPAGE']:
+	if int(branch.attrib['LEAF']) and int(branch.attrib['HASPAGE']):
 		if tid not in data['leaves']:
 			images = []
 			request = urlopen('http://tolweb.org/%s' % tid)
@@ -63,12 +64,17 @@ def scan(branch, parent):
 				image = src.split('/')[-1]
 				images.append(image)
 				if not exists('images/%s' % image):
-					request = urlopen('http://tolweb.org%s' % src)
-					with open(scratch, 'w') as f:
-						f.write(request.read())
-					request.close()
-					move(scratch, 'images/%s' % image)
-				scan.images += 1
+					try:
+						request = urlopen('http://tolweb.org%s' % src)
+						with open(scratch, 'w') as f:
+							f.write(request.read())
+						request.close()
+						sleep(0.25)
+						move(scratch, 'images/%s' % image)
+					except HTTPError as e:
+						console(e)
+						console('http://tolweb.org%s' % src)
+					scan.images += 1
 			names = [branch.find('NAME').text]
 			if branch.find('OTHERNAMES') is not None:
 				for n in branch.findall('OTHERNAMES/OTHERNAME/NAME'):
@@ -81,7 +87,7 @@ def scan(branch, parent):
 			desc = branch.find('DESCRIPTION').text
 			if desc:
 				species['desc'] = desc
-			if branch.attrib['EXTINCT']:
+			if int(branch.attrib['EXTINCT']) == 2:
 				species['extinct'] = True
 			data['leaves'][tid] = species
 		scan.leaves += 1
@@ -99,8 +105,6 @@ scan.images  = 0
 
 if not exists('images'):
 	mkdir('images')
-else:
-	scan.images = len([name for name in listdir('.') if isfile(name)])
 
 if not exists(cache):
 	console('Downloading %s' % cache)
