@@ -2,6 +2,7 @@ from __future__ import print_function
 import xml.etree.ElementTree as xml
 from os.path import exists
 from urllib2 import urlopen
+from shutil import move
 from json import loads, dumps
 from sys import stdout
 from os import mkdir
@@ -10,8 +11,9 @@ import re
 url = 'http://tolweb.org/onlinecontributors/app?service=external&page=xml/TreeStructureService&node_id=1'
 reg = re.compile(r'javascript:popup_window(_[\d]+)?....><img( class="singletillus")? src="([^"]+)"')
 
-cache  = 'tree.xml'
-output = 'tree.json'
+scratch = 'scratch.dat'
+cache   = 'tree.xml'
+output  = 'tree.json'
 
 tree = {}
 
@@ -61,10 +63,12 @@ def scan(branch, parent):
 					_, _, src = match
 					image = src.split('/')[-1]
 					images.append(image)
-					request = urlopen('http://tolweb.org%s' % src)
-					with open('images/%s' % image, 'w') as f:
-						f.write(request.read())
-					request.close()
+					if not exists('images/%s' % image):
+						request = urlopen('http://tolweb.org%s' % src)
+						with open(scratch, 'w') as f:
+							f.write(request.read())
+						request.close()
+						move(scratch, 'images/%s' % image)
 					scan.images += 1
 				if images:
 					names = [branch.find('NAME').text]
@@ -97,13 +101,14 @@ if not exists('images'):
 if not exists(cache):
 	console('Downloading %s' % cache)
 	response = urlopen(url)
-	with open(cache, 'w') as f:
+	with open(scratch, 'w') as f:
 		for chunk in read_file(response):
 			f.write(chunk)
+	move(scratch, cache)
 	response.close()
 
 if exists(output):
-	console('Opening ' % output)
+	console('Opening %s' % output)
 	with open(output, 'r') as f:
 		tree = loads(f.read())
 
