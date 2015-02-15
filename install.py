@@ -48,13 +48,11 @@ def read_file(f, chunksize=10240):
 		else:
 			break
 
-def scan(branch, path):
+def scan(branch, parent):
 	tid = branch.attrib['ID']
-	path.append(tid)
 	if branch.attrib['LEAF']:
 		if branch.attrib['HASPAGE']:
-			key = '/'.join(path)
-			if not key in tree:
+			if not tid in tree:
 				images = []
 				request = urlopen('http://tolweb.org/%s' % tid)
 				data = request.read()
@@ -67,12 +65,14 @@ def scan(branch, path):
 					with open('images/%s' % image, 'w') as f:
 						f.write(request.read())
 					request.close()
+					scan.images += 1
 				if images:
 					names = [branch.find('NAME').text]
 					if branch.find('OTHERNAMES') is not None:
 						for n in branch.findall('OTHERNAMES/OTHERNAME/NAME'):
 							names.append(n.text)
 					species = {
+						'parent': parent,
 						'names': names,
 						'images': images,
 					}
@@ -81,14 +81,15 @@ def scan(branch, path):
 						species['desc'] = desc
 					if branch.attrib['EXTINCT']:
 						species['extinct'] = True
-					tree[key] = species
-	scan.count += 1
-	console('Scanning %d' % scan.count, polling=True)
+					tree[tid] = species
+	scan.nodes += 1
+	console('Scanning %d nodes and %d images' % (scan.nodes, scan.images), polling=True)
 	nodes = branch.findall('NODES/NODE')
 	if nodes is not None:
 		for node in nodes:
-			scan(node, path)
-scan.count = 0
+			scan(node, tid)
+scan.nodes = 0
+scan.images = 0
 
 if not exists('images'):
 	mkdir('images')
@@ -104,10 +105,15 @@ if not exists(cache):
 if exists(output):
 	console('Opening ' % output)
 	with open(output, 'r') as f:
-		tree = loads(f)
+		tree = loads(f.read())
 
 console('Parsing %s' % cache)
 root = xml.parse(cache).getroot()
-scan(root.find('NODE'), [])
-# TODO save species to file
+try:
+	scan(root.find('NODE'), 0)
+except KeyboardInterrupt:
+	pass
+with open(output, 'w') as f:
+	console('Saving %s' % output)
+	f.write(dumps(tree))
 console('Done!')
