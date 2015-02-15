@@ -6,8 +6,8 @@
 		<script src="angular.min.js"></script>
 		<script src="main.js"></script>
 	</head>
-	<body ng-app="gameApp" ng-controller="initGame">
-		<div ng-repeat="node in game" ng-click="submitGame(node.tid)">
+	<body ng-app="gameApp" ng-controller="gameController">
+		<div ng-repeat="node in nodes" ng-click="submitGame($index)">
 			<img ng-src="{{node.images[0]}}" />
 			<p ng-repeat="name in node.names">{{name}}</p>
 			<span>{{name.desc}}</span>

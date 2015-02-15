@@ -1,32 +1,36 @@
 var gameApp = angular.module('gameApp', []);
 
-gameApp.controller('gameCtrl', function($scope, $http) {
-	$http.get('species.json').success(function(response) {
-		$scope.species = response;
-	});
-	$scope.newGame = function() {
-		$scope.game = [0, 0, 0];
-		for(var i in $scope.game) {
-			var tid = Math.floor((Math.random() * $scope.species) + 1);
-			$http.get('nodes/' + tid + '.json').success(function(response) {
-				$scope.game[i] = response;
-				$scope.game[i].tid = tid;
-			});
-		}
-		// TODO find both common ancestors
-		var tryAgain = false;
-		if($scope.game[0].tid == $scope.game[1].tid) tryAgain = true;
-		if($scope.game[1].tid == $scope.game[2].tid) tryAgain = true;
-		if($scope.game[0].tid == $scope.game[2].tid) tryAgain = true;
-		if($scope.game[3].tid == $scope.game[4].tid) tryAgain = true;
-		if(tryAgain) $scope.newGame();
+gameApp.controller('gameController', function($scope, $http)
+{
+	$scope.nodes = [];
+	$scope.newGame = function()
+	{
+		$scope.gameStatus = 'loading';
+		$http.get('game.php').success(function(response)
+		{
+			$scope.nodes = response;
+			$scope.gameStatus = 'ready';
+			console.log($scope.gameStatus, $scope.nodes);
+		});
 	};
-	$scope.submitGame = function() {
-		// TODO
-	};
-	$scope.newGame();
-}
 
-function submitGame() {
-	
-}
+	$scope.submitGame = function(coice)
+	{
+		$scope.gameStatus = 'posting';
+		ids = [];
+		for(var i in $scope.nodes)
+			ids.push($scope.nodes[i].tid)
+		$http.post('game.php', { 'ids': ids, 'choice': choice }).success(function(response)
+		{
+			var nodes = [];
+			for(i in response.order)
+				nodes.append($scope.nodes[response.order[i]]);
+			for(i in response.ancestors)
+				nodes.append(response.ancestors[i]);
+			$scope.nodes = nodes; // TODO animate.
+			$scope.gameStatus = response.correct ? 'won' : 'lost';
+		});
+	};
+
+	$scope.newGame();
+});

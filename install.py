@@ -139,7 +139,6 @@ try:
 				sleep(0.25)
 				move(scratch, 'images/%s' % image)
 		del node['haspage']
-		scan.nodes[tid] = node
 	console('Loaded pages')
 except KeyboardInterrupt:
 	abort = True
@@ -177,11 +176,11 @@ species = []
 for tid, node in scan.nodes.iteritems():
 	count += 1
 	console('Listing species (%d of %d)' % (count, scan.count), polling=True)
-	if not (node['images'] and node['leaf']):
+	if not ('images' in node and node['images'] and 'leaf' in node):
 		continue # Only play game with leaf nodes having at least one image.
 	species.append(tid)
 name = 'species.json'
 with open(name, 'w') as f:
 	console('Writing %s' % name, polling=True)
-	f.write(species)
+	f.write(dumps(species))
 	console('Wrote %s' % name)
