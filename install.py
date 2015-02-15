@@ -50,19 +50,19 @@ def read_file(f, chunksize=10240):
 def scan(branch, path):
 	scan.count += 1
 	console('Scanning %d' % scan.count)
-	tid = int(branch.attrib['ID'])
+	tid = branch.attrib['ID']
 	path.append(tid)
 	if branch.attrib['LEAF']:
 		if branch.attrib['HASPAGE']:
 			key = '/'.join(path)
 			if not key in tree:
 				images = []
-				request = urlopen('http://tolweb.org/%d' % bid)
+				request = urlopen('http://tolweb.org/%s' % tid)
 				data = request.read()
 				request.close()
-				for match in reg.findall(data, re.MULTILINE)
+				for match in reg.findall(data, re.MULTILINE):
 					_, _, src = match
-					image = '%d-%d.%s' % (tid, len(images) + 1, src.split('.')[-1])
+					image = '%s-%d.%s' % (tid, len(images) + 1, src.split('.')[-1])
 					images.append(image)
 					request = urlopen('http://tolweb.org%s' % src)
 					with open('images/%s' % image, 'w') as f:
@@ -70,7 +70,7 @@ def scan(branch, path):
 					request.close()
 				if images:
 					names = [branch.find('NAME').text]
-					if branch.find('OTHERNAMES'):
+					if branch.find('OTHERNAMES') is not None:
 						for n in branch.findall('OTHERNAMES/OTHERNAME/NAME'):
 							names.append(n.text)
 					species = {
@@ -84,10 +84,13 @@ def scan(branch, path):
 						species['extinct'] = True
 					tree[key] = species
 	else:
-		nodes = branch.findall('nodes')
+		nodes = branch.findall('NODES')
 		for node in nodes:
 			scan(node, path)
 scan.count = 0
+
+if not exists('images'):
+	mkdir('images')
 
 if not exists(cache):
 	console('Downloading %s' % cache)
