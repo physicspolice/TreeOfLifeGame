@@ -1,11 +1,11 @@
 from __future__ import print_function
 import xml.etree.ElementTree as xml
-from os.path import exists
+from os.path import exists, isfile
 from urllib2 import urlopen
 from shutil import move
 from json import loads, dumps
 from sys import stdout
-from os import mkdir
+from os import mkdir, listdir
 import re
 
 url = 'http://tolweb.org/onlinecontributors/app?service=external&page=xml/TreeStructureService&node_id=1'
@@ -52,52 +52,55 @@ def read_file(f, chunksize=10240):
 
 def scan(branch, parent):
 	tid = branch.attrib['ID']
-	data['parents'][tid] = parent
-	if branch.attrib['LEAF']:
-		if branch.attrib['HASPAGE']:
-			if not tid in data['leaves']:
-				images = []
-				request = urlopen('http://tolweb.org/%s' % tid)
-				page = request.read()
-				request.close()
-				for match in reg.findall(page, re.MULTILINE):
-					_, _, src = match
-					image = src.split('/')[-1]
-					images.append(image)
-					if not exists('images/%s' % image):
-						request = urlopen('http://tolweb.org%s' % src)
-						with open(scratch, 'w') as f:
-							f.write(request.read())
-						request.close()
-						move(scratch, 'images/%s' % image)
-					scan.images += 1
-				if images:
-					names = [branch.find('NAME').text]
-					if branch.find('OTHERNAMES') is not None:
-						for n in branch.findall('OTHERNAMES/OTHERNAME/NAME'):
-							names.append(n.text)
-					species = {
-						'parent': parent,
-						'names': names,
-						'images': images,
-					}
-					desc = branch.find('DESCRIPTION').text
-					if desc:
-						species['desc'] = desc
-					if branch.attrib['EXTINCT']:
-						species['extinct'] = True
-					data['leaves'][tid] = species
-	scan.nodes += 1
-	console('Scanning %d nodes and %d images' % (scan.nodes, scan.images), polling=True)
+	if branch.attrib['LEAF'] and branch.attrib['HASPAGE']:
+		if tid not in data['leaves']:
+			images = []
+			request = urlopen('http://tolweb.org/%s' % tid)
+			page = request.read()
+			request.close()
+			for match in reg.findall(page, re.MULTILINE):
+				_, _, src = match
+				image = src.split('/')[-1]
+				images.append(image)
+				if not exists('images/%s' % image):
+					request = urlopen('http://tolweb.org%s' % src)
+					with open(scratch, 'w') as f:
+						f.write(request.read())
+					request.close()
+					move(scratch, 'images/%s' % image)
+				scan.images += 1
+			names = [branch.find('NAME').text]
+			if branch.find('OTHERNAMES') is not None:
+				for n in branch.findall('OTHERNAMES/OTHERNAME/NAME'):
+					names.append(n.text)
+			species = {
+				'parent': parent,
+				'names': names,
+				'images': images,
+			}
+			desc = branch.find('DESCRIPTION').text
+			if desc:
+				species['desc'] = desc
+			if branch.attrib['EXTINCT']:
+				species['extinct'] = True
+			data['leaves'][tid] = species
+		scan.leaves += 1
+	if not tid in data['parents']:
+		data['parents'][tid] = parent
+	scan.parents += 1
+	console('Scanning %d parents, %d leaves, and %d images' % (scan.parents, scan.leaves, scan.images), polling=True)
 	nodes = branch.findall('NODES/NODE')
 	if nodes is not None:
 		for node in nodes:
 			scan(node, tid)
-scan.nodes = 0
-scan.images = 0
+scan.parents = 0
+scan.leaves  = 0
+scan.images  = 0
 
 if not exists('images'):
 	mkdir('images')
+else:
+	scan.images = len([name for name in listdir('.') if isfile(name)])
 
 if not exists(cache):
 	console('Downloading %s' % cache)
@@ -115,11 +118,13 @@ if exists(output):
 
 console('Parsing %s' % cache)
 root = xml.parse(cache).getroot()
+message = 'Done!'
 try:
 	scan(root.find('NODE'), 0)
 except KeyboardInterrupt:
-	pass
+	message = 'Aborted!'
+	console('Aborting', polling=True)
 with open(output, 'w') as f:
 	console('Saving %s' % output)
 	f.write(dumps(data))
-console('Done!')
+console(message)
