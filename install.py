@@ -13,9 +13,9 @@ reg = re.compile(r'javascript:popup_window(_[\d]+)?....><img( class="singletillu
 
 scratch = 'scratch.dat'
 cache   = 'tree.xml'
-output  = 'tree.json'
+output  = 'data.json'
 
-tree = {}
+data = { 'parents': {}, 'leaves': {} }
 
 def console(message, polling=False):
 	message = '  ' + message
@@ -52,14 +52,15 @@ def read_file(f, chunksize=10240):
 
 def scan(branch, parent):
 	tid = branch.attrib['ID']
+	data['parents'][tid] = parent
 	if branch.attrib['LEAF']:
 		if branch.attrib['HASPAGE']:
-			if not tid in tree:
+			if not tid in data['leaves']:
 				images = []
 				request = urlopen('http://tolweb.org/%s' % tid)
-				data = request.read()
+				page = request.read()
 				request.close()
-				for match in reg.findall(data, re.MULTILINE):
+				for match in reg.findall(page, re.MULTILINE):
 					_, _, src = match
 					image = src.split('/')[-1]
 					images.append(image)
@@ -85,7 +86,7 @@ def scan(branch, parent):
 						species['desc'] = desc
 					if branch.attrib['EXTINCT']:
 						species['extinct'] = True
-					tree[tid] = species
+					data['leaves'][tid] = species
 	scan.nodes += 1
 	console('Scanning %d nodes and %d images' % (scan.nodes, scan.images), polling=True)
 	nodes = branch.findall('NODES/NODE')
@@ -110,7 +111,7 @@ if not exists(cache):
 if exists(output):
 	console('Opening %s' % output)
 	with open(output, 'r') as f:
-		tree = loads(f.read())
+		data = loads(f.read())
 
 console('Parsing %s' % cache)
 root = xml.parse(cache).getroot()
@@ -120,5 +121,5 @@ except KeyboardInterrupt:
 	pass
 with open(output, 'w') as f:
 	console('Saving %s' % output)
-	f.write(dumps(tree))
+	f.write(dumps(data))
 console('Done!')
