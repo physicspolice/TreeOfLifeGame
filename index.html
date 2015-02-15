@@ -2,15 +2,21 @@
 <html>
 	<head>
 		<title>Tree of Life the Game</title>
+		<link rel="stylesheet" href="bootstrap.min.css">
 		<link rel="stylesheet" href="main.css">
 		<script src="angular.min.js"></script>
 		<script src="main.js"></script>
 	</head>
 	<body ng-app="gameApp" ng-controller="gameController">
-		<div ng-repeat="node in nodes" ng-click="submitGame($index)">
-			<img ng-src="{{node.images[0]}}" />
-			<p ng-repeat="name in node.names">{{name}}</p>
-			<span>{{name.desc}}</span>
-		</div>
+		<section ng-repeat="node in nodes" ng-click="submitGame($index)">
+			<div>
+				<span></span>
+				<img ng-repeat="image in node.images" ng-src="images/{{image}}" ng-show="node.imageIndex == $index" />
+			</div>
+			<ul>
+				<li ng-repeat="name in node.names" ng-show="node.nameIndex == $index">{{name}}</li>
+			</ul>
+			<strong>{{node.desc}}</strong>
+		</section>
 	</body>
 </html>

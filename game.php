@@ -7,7 +7,7 @@ function lca($na, $nb)
 	{
 		$a = array_pop($na['parents']);
 		$b = array_pop($nb['parents']);
-		if($a == $b)
+		if($a && $b && ($a == $b))
 			$l[] = $a;
 		else
 			break;
@@ -31,14 +31,15 @@ function order($game)
 
 function newGame()
 {
-	$species = json_decode(file_read_contents('species.json'));
-	$game = array();
-	while(count($game) < 3)
+	$species = json_decode(file_get_contents('species.json'), true);
+	$nodes = array();
+	while(count($nodes) < 3)
 	{
 		$tid = $species[rand(0, count($species))];
-		$game[] = json_decode(file_read_contents('nodes/$tid.json'));
+		$node = json_decode(file_get_contents("nodes/$tid.json"), true);
+		$nodes[] = $node;
 	}
-	return $game;
+	return $nodes;
 }
 
 if($choice = (int) $_POST)
@@ -46,30 +47,32 @@ if($choice = (int) $_POST)
 	if(!is_array($_POST['ids']))  die('Missing ids array.');
 	if(count($_POST['ids']) != 3) die('Wrong number of ids.');
 	$game = array();
-	for($_POST['ids'] as $id)
+	foreach($_POST['ids'] as $id)
 	{
 		$file = 'nodes/' . intVal($id) . '.json';
 		if(!file_exists($file)) die('Node not found: ' . intVal($id));
-		$game[] = json_decode(file_read_contents($file));
+		$game[] = json_decode(file_get_contents($file), true);
 	}
 	list($order, $ancestors) = order($game);
 	die(json_encode(array(
 		'ancestors' => $ancestors,
 		'order'     => $order,
 		'correct'   => ($order[2] == $choice),
-	));
+	)));
 }
 else
 {
 	do
 	{
-		$game = newGame();
+		$nodes = newGame();
 		$retry = false;
-		if($game[0]['tid'] == $game[1]['tid']) $retry = true;
-		if($game[1]['tid'] == $game[2]['tid']) $retry = true;
-		if($game[0]['tid'] == $game[2]['tid']) $retry = true;
-		if(lca($game[0], $game[1]) == lca($game[1], $game[2])) $retry = true;
+		if($nodes[0]['tid'] == $nodes[1]['tid']) $retry = true;
+		if($nodes[1]['tid'] == $nodes[2]['tid']) $retry = true;
+		if($nodes[0]['tid'] == $nodes[2]['tid']) $retry = true;
+		if(lca($nodes[0], $nodes[1]) == lca($nodes[1], $nodes[2])) $retry = true;
 	}
 	while($retry);
-	die(json_encode($game));
+	foreach($nodes as &$node)
+		unset($node['leaf'], $node['parents']);
+	die(json_encode($nodes));
 }

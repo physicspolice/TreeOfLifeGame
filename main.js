@@ -9,8 +9,20 @@ gameApp.controller('gameController', function($scope, $http)
 		$http.get('game.php').success(function(response)
 		{
 			$scope.nodes = response;
+			for(var i in $scope.nodes)
+			{
+				$scope.nodes[i].nameIndex  = 0;
+				$scope.nodes[i].imageIndex = 0;
+				if($scope.nodes[i].names.length > 1)
+				{
+					// TODO animate.
+				}
+				if($scope.nodes[i].images.length > 1)
+				{
+					// TODO animate.
+				}
+			}
 			$scope.gameStatus = 'ready';
-			console.log($scope.gameStatus, $scope.nodes);
 		});
 	};
 
