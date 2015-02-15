@@ -26,7 +26,7 @@ gameApp.controller('gameController', function($scope, $http)
 		});
 	};
 
-	$scope.submitGame = function(coice)
+	$scope.submitGame = function(choice)
 	{
 		$scope.gameStatus = 'posting';
 		ids = [];
