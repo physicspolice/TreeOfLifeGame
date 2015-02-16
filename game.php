@@ -15,17 +15,17 @@ function lca($na, $nb)
 	return $l;
 }
 
-function order($game)
+function order($nodes)
 {
 	$ancestors = array(
-		lca($game[0], $game[1]),
-		lca($game[1], $game[2]),
-		lca($game[0], $game[2]),
+		lca($nodes[0], $nodes[1]),
+		lca($nodes[1], $nodes[2]),
+		lca($nodes[0], $nodes[2]),
 	);
-	if($ancestors[0] == $ancestors[1]) return array(array(0, 2, 1), array(end($ancestors[0]), end($ancestors[2])));
-	if($ancestors[1] == $ancestors[2]) return array(array(0, 1, 2), array(end($ancestors[1]), end($ancestors[0])));
-	if($ancestors[0] == $ancestors[2]) return array(array(1, 2, 0), array(end($ancestors[0]), end($ancestors[1])));
-	var_dump(array('game' => $game, 'ancestors' => $ancestors));
+	if($ancestors[0] == $ancestors[1]) return array(array(0, 2, 1), array(end($ancestors[2]), end($ancestors[0])));
+	if($ancestors[1] == $ancestors[2]) return array(array(0, 1, 2), array(end($ancestors[0]), end($ancestors[1])));
+	if($ancestors[0] == $ancestors[2]) return array(array(1, 2, 0), array(end($ancestors[1]), end($ancestors[0])));
+	var_dump(array('nodes' => $nodes, 'ancestors' => $ancestors));
 	die('Failed to determine order!');
 }
 
@@ -78,7 +78,13 @@ else
 		if($nodes[0]['tid'] == $nodes[1]['tid']) $retry = true;
 		if($nodes[1]['tid'] == $nodes[2]['tid']) $retry = true;
 		if($nodes[0]['tid'] == $nodes[2]['tid']) $retry = true;
-		if(lca($nodes[0], $nodes[1]) == lca($nodes[1], $nodes[2])) $retry = true;
+		$a = end(lca($nodes[0], $nodes[1]));
+		$b = end(lca($nodes[1], $nodes[2]));
+		$na = json_decode(file_get_contents("nodes/$a.json"), true);
+		$nb = json_decode(file_get_contents("nodes/$b.json"), true);
+		if(!$na['names'][0]) $retry = true;
+		if(!$nb['names'][0]) $retry = true;
+		if($a == $b) $retry = true;
 	}
 	while($retry);
 	foreach($nodes as &$node)

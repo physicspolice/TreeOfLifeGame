@@ -1,47 +1,69 @@
+body {
+	text-align: center;
+	padding-top: 10px;
+	min-width: 980px;
+	background-color: #ded;
+}
+div {
+	display: inline-block;
+	width: 980px;
+}
 section {
 	border: 10px solid #000;
 	border-radius: 5px;
 	display: inline-block;
 	width: 300px;
-	height: 400px;
+	height: 300px;
 	overflow: hidden;
-	text-align: center;
 	margin: 10px;
 	cursor: pointer;
-	box-shadow: 10px 10px 6px -6px #888;
-	background-color: #ccc;
-	font-size: 19px;
+	box-shadow: 10px 10px 6px -6px #666;
+	background-color: #ccd;
+	font-size: 14px;
 }
 section:hover {
 	border-color: #080;
 }
-section div {
+section p {
+	margin: 0px;
 	width: 100%;
-	height: 250px;
+	height: 200px;
 	white-space: nowrap;
 	background: #444;
 	border-bottom: 10px solid #000;
 }
-section div span {
+section p span {
 	display: inline-block;
 	height: 100%;
 	vertical-align: middle;
 }
-section div img {
-	margin-left: -4px;
+section p img {
+	margin-left: -5px;
 	max-width: 280px;
-	max-height: 240px;
+	max-height: 190px;
 	vertical-align: middle;
 }
 section ul {
-	margin: 5px;
+	margin: 0;
 	padding: 0;
+	padding: 0 5px;
 }
 section ul li {
+	height: 40px;
 	font-style: italic;
 	list-style: none;
 }
 section strong {
+	padding: 0 5px;
 	display: inline-block;
-	margin: 5px;
+}
+section:nth-child(4) {
+	display: block;
+	margin-top: 50px;
+	margin-left: 175px;
+}
+section:nth-child(5) {
+	display: block;
+	margin-top: 50px;
+	margin-left: 340px;
 }

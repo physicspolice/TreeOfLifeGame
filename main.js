@@ -36,9 +36,13 @@ gameApp.controller('gameController', function($scope, $http)
 		{
 			var nodes = [];
 			for(i in response.order)
-				nodes.append($scope.nodes[response.order[i]]);
+				nodes.push($scope.nodes[response.order[i]]);
 			for(i in response.ancestors)
-				nodes.append(response.ancestors[i]);
+			{
+				response.ancestors[i].nameIndex  = 0;
+				response.ancestors[i].imageIndex = 0;
+				nodes.push(response.ancestors[i]);
+			}
 			$scope.nodes = nodes; // TODO animate.
 			$scope.gameStatus = response.correct ? 'won' : 'lost';
 		});

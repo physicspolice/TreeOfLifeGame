@@ -8,15 +8,17 @@
 		<script src="main.js"></script>
 	</head>
 	<body ng-app="gameApp" ng-controller="gameController">
-		<section ng-repeat="node in nodes" ng-click="submitGame($index)">
-			<div>
-				<span></span>
-				<img ng-repeat="image in node.images" ng-src="images/{{image}}" ng-show="node.imageIndex == $index" />
-			</div>
-			<ul>
-				<li ng-repeat="name in node.names" ng-show="node.nameIndex == $index">{{name}}</li>
-			</ul>
-			<strong>{{node.desc}}</strong>
-		</section>
+		<div>
+			<section ng-repeat="node in nodes" ng-click="submitGame($index)">
+				<p>
+					<span></span>
+					<img ng-repeat="image in node.images" ng-src="images/{{image}}" ng-show="node.imageIndex == $index" />
+				</p>
+				<ul>
+					<li ng-repeat="name in node.names" ng-show="node.nameIndex == $index">{{name}}</li>
+				</ul>
+				<strong>{{node.desc}}</strong>
+			</section>
+		</div>
 	</body>
 </html>
