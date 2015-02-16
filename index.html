@@ -8,7 +8,7 @@
 		<script src="main.js"></script>
 	</head>
 	<body ng-app="gameApp" ng-controller="gameController">
-		<div>
+		<div class="{{gameStatus}}">
 			<section ng-repeat="node in nodes" ng-click="submitGame($index)">
 				<p>
 					<span></span>

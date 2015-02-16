@@ -50,3 +50,7 @@ gameApp.controller('gameController', function($scope, $http)
 
 	$scope.newGame();
 });
+
+// TODO show feedback for correct/incorrect answers
+// TODO keep track of wins/losses
+// TODO fix game reset

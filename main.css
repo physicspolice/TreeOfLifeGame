@@ -8,6 +8,11 @@ div {
 	display: inline-block;
 	width: 980px;
 }
+div.won, div.lost {
+	background-image: url('tree.png');
+	background-repeat: no-repeat;
+	background-position: 170px 320px;
+}
 section {
 	border: 10px solid #000;
 	border-radius: 5px;
@@ -64,6 +69,6 @@ section:nth-child(4) {
 }
 section:nth-child(5) {
 	display: block;
-	margin-top: 50px;
+	margin-top: 70px;
 	margin-left: 340px;
 }
